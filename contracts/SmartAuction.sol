@@ -46,6 +46,11 @@ contract SmartAuction {
         _;
     }
 
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
     function min(uint a, uint b) pure internal returns(uint) {
         if (a <= b) {
             return a;
@@ -70,5 +75,39 @@ contract SmartAuction {
 
             highestBidder = payable(msg.sender);
         }
+    }
+
+    function cancelAuction() public onlyOwner {
+        auctionState =  State.Cancelled;
+    }
+
+    function finalizeAuction() public {
+        require(auctionState == State.Cancelled || block.number > endBlock);
+
+        //Only a bidder or the owner can finalize the auction
+        require(msg.sender == owner || bids[msg.sender] > 0);
+
+        address payable recipient;
+        uint value;
+
+        if (auctionState == State.Cancelled) {
+            recipient = payable(msg.sender);
+            value = bids[msg.sender];
+        } else { // Auction not cancelled
+            if (msg.sender == owner) { // this is the owner
+                recipient = owner;
+                value = highestBindingBid;
+            } else { // this is a bidder
+                if (msg.sender == highestBidder) {
+                    recipient = highestBidder;
+                    value = bids[highestBidder] - highestBindingBid;
+                } else { // this is neither the owner not the highest idder
+                    recipient = payable(msg.sender);
+                    value = bids[msg.sender];
+                }
+            }
+        }
+
+        recipient.transfer(value);
     }
 }
