@@ -108,6 +108,7 @@ contract SmartAuction {
             }
         }
 
+        bids[recipient] = 0; // This way a bidder cannot request their funds more than once
         recipient.transfer(value);
     }
 }
