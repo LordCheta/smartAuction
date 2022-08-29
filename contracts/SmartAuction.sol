@@ -22,8 +22,8 @@ contract SmartAuction {
 
     uint bidIncrement;
 
-    constructor() {
-        owner = payable(msg.sender);
+    constructor(address eoa) {
+        owner = payable(eoa);
         auctionState = State.Running;
         startBlock = block.number;
         endBlock = startBlock + 40320;
